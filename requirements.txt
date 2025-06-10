@@ -1,0 +1,12 @@
+python-dotenv
+fastapi
+uvicorn[standard]
+websockets
+google-adk==1.0.0
+google-genai
+google-cloud-aiplatform
+google-auth
+google-api-core
+google-ai-generativelanguage
+json-repair
+jsonschema

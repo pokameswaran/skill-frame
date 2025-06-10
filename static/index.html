@@ -1,0 +1,2065 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Scriptly - AI Role Play to develop soft skills</title>
+    <!-- Google Fonts - Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet">
+    
+    <!-- PDF.js Library -->
+    <script src="/static/build/pdf.mjs" type="module"></script>
+    
+    <!-- PDF Viewer CSS -->
+    <link rel="stylesheet" href="/static/css/pdf-viewer.css">
+    
+    <!-- Main App Script -->
+    <script src="/static/js/app.js" type="module"></script>
+    <script src="/static/js/pdf-viewer.js" type="module"></script>
+    
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        font-weight: 300;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      /* Pearson Title Bar - Reduced height by 50% */
+      .title-bar {
+        background: #0d004d;
+        color: white;
+        padding: 6px 20px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        position: relative;
+        z-index: 1001;
+        min-height: 30px;
+      }
+      
+      .pearson-logo {
+        height: 18px;
+        width: auto;
+        margin-right: 15px;
+        filter: brightness(1.1);
+      }
+      
+      .title-bar h1 {
+        margin: 0;
+        font-size: 1.1em;
+        font-weight: 500;
+        color: white;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        letter-spacing: 0.3px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      
+      .title-bar::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+      }
+      
+      /* Main layout container with scrolling */
+      .main-container {
+        display: flex;
+        flex: 1;
+        gap: 20px;
+        min-height: 0;
+        padding: 20px 20px 65px 20px; /* Adjusted bottom padding for smaller controls */
+        transition: all 0.3s ease;
+        background-color: #edecf6;
+        overflow: hidden; /* Prevent main container from scrolling */
+        /* Remove extra bottom padding now that bottom-controls are gone */
+        padding-bottom: 0 !important;
+      }
+      
+      /* Left content area - Initially shows welcome message */
+      .content-area {
+        flex: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        transition: flex 0.3s ease;
+        overflow: hidden; /* Changed from auto to hidden since PDF viewer handles its own scrolling */
+        min-height: 0; /* Important for flex child to shrink */
+        position: relative; /* Add for positioning the collapse button */
+      }
+      
+      /* PDF Viewer specific override */
+      .content-area #pdfViewerContainer {
+        overflow: visible; /* Allow PDF viewer to handle its own scrolling */
+        height: 100%; /* Take full available height */
+      }
+      
+      /* Expand content area when chat is hidden */
+      .content-area.expanded {
+        flex: 3;
+      }
+      
+      /* Panel collapse button */
+      .panel-collapse-button {
+        position: absolute;
+        top: 50%;
+        right: 20px;
+        transform: translateY(-50%);
+        width: 28px;
+        height: 28px;
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(226, 232, 240, 0.6);
+        border-radius: 6px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: normal;
+        color: #94a3b8;
+        transition: all 0.3s ease;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        z-index: 100;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        opacity: 0.7;
+      }
+      
+      .panel-collapse-button:hover {
+        background: rgba(248, 250, 252, 0.95);
+        border-color: rgba(203, 213, 225, 0.8);
+        color: #64748b;
+        transform: translateY(-50%) translateY(-1px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+        opacity: 1;
+      }
+      
+      .panel-collapse-button:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      
+      /* Right sidebar with horizontal sliding animation */
+      .right-sidebar {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 300px;
+        max-height: calc(100vh - 125px); /* Adjusted for smaller controls */
+        gap: 10px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto; /* Add scrolling to right sidebar */
+        transform: translateX(0);
+        opacity: 1;
+      }
+      
+      .right-sidebar.panel-collapsed {
+        transform: translateX(100%);
+        opacity: 0;
+        min-width: 0;
+        flex: 0;
+        overflow: hidden;
+      }
+      
+      .right-sidebar.hidden {
+        display: none;
+      }
+      
+      /* Content area expansion when panel is collapsed */
+      .content-area.panel-expanded {
+        flex: 1;
+        margin-right: 0;
+      }
+      
+      /* Chat history styles */
+      .chat-section {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #fff;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        min-height: 200px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .chat-section.hidden {
+        display: none;
+      }
+      .chat-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        padding: 12px 16px;
+        border-bottom: 1px solid #e2e8f0;
+        border-radius: 8px 8px 0 0;
+        flex-shrink: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .chat-header h3 {
+        margin: 0;
+        font-size: 0.9em;
+        color: #334155;
+        font-weight: 600;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      .chat-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+      .chat-content.minimized {
+        display: none !important;
+        height: 0 !important;
+        overflow: hidden !important;
+      }
+      
+      /* Chat section when minimized */
+      .chat-section.minimized {
+        flex: 0 0 auto !important;
+        min-height: auto !important;
+        padding: 8px;
+      }
+      
+      .chat-section.minimized .chat-header {
+        border-bottom: none;
+        margin-bottom: 0;
+      }
+      
+      .chat-section.minimized .minimize-button {
+        transform: rotate(180deg);
+      }
+      
+      #messages {
+        flex: 1;
+        overflow-y: auto;
+        border: none;
+        padding: 12px;
+        margin: 0;
+        min-height: 150px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 400;
+        font-size: 13px;
+      }
+      #messages p {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 400;
+        line-height: 1.4;
+        font-size: 13px;
+        margin-bottom: 8px;
+      }
+      .chat-status {
+        padding: 8px 16px;
+        font-size: 0.9em;
+        color: #64748b;
+        font-style: italic;
+        border-top: 1px solid #f1f5f9;
+        background-color: #fafafa;
+        flex-shrink: 0;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 300;
+      }
+      
+      /* Video section - Optimized for space */
+      .video-section {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: #fff;
+        padding: 8px;
+        display: none;
+        flex-shrink: 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .video-section.active {
+        display: block;
+      }
+      
+      /* Video header with minimize button */
+      .video-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 16px;
+        border-bottom: 1px solid #e2e8f0;
+        border-radius: 8px 8px 0 0;
+        margin-bottom: 8px;
+      }
+      
+      .video-title {
+        font-size: 0.9em;
+        font-weight: 600;
+        color: #334155;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      
+      .minimize-button {
+        width: 24px;
+        height: 24px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+        color: #6b7280;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        transition: all 0.2s ease;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      
+      .minimize-button:hover {
+        border-color: #9ca3af;
+        background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+        color: #374151;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      
+      .minimize-button:active {
+        transform: translateY(0);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+      
+      /* Video content area */
+      .video-content {
+        transition: all 0.3s ease;
+      }
+      
+      .video-content.minimized {
+        display: none;
+      }
+      
+      /* Video section when minimized */
+      .video-section.minimized {
+        padding: 8px;
+      }
+      
+      .video-section.minimized .video-header {
+        margin-bottom: 0;
+        border-bottom: none;
+      }
+      
+      .video-section.minimized .minimize-button {
+        transform: rotate(180deg);
+      }
+      
+      #videoPreview {
+        width: 100%;
+        height: auto;
+        max-height: 200px;
+        border: 1px solid #d1d5db;
+        background-color: #f9fafb;
+        border-radius: 6px;
+      }
+      #videoStatus {
+        font-style: italic;
+        color: #6b7280;
+        margin: 4px 0;
+        font-size: 0.8em;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 300;
+      }
+      
+      /* Bottom controls - Further reduced height */
+      .bottom-controls {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #582cac;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 9px 20px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        z-index: 1000;
+        box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+        height: 45px; /* Reduced from 60px to 45px (75% of current) */
+      }
+      
+      .controls-center {
+        flex: 2;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      
+      .controls-right {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 300px;
+      }
+      
+      /* Message form styling - Adjusted for smaller controls */
+      #messageForm {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+      }
+      
+      #message {
+        flex: 1;
+        padding: 6px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s ease;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 400;
+        min-width: 0; /* Allow input to shrink */
+      }
+      
+      #message:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      }
+      
+      #sendButton {
+        width: 36px;
+        height: 36px;
+        background: #0d004d;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(13, 0, 77, 0.3);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      
+      #sendButton:hover {
+        background: rgba(13, 0, 77, 0.9);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(13, 0, 77, 0.4);
+      }
+      
+      #sendButton:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+      
+      /* Media toggle buttons - Larger icons */
+      .media-controls {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      
+      .toggle-button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #e5e7eb;
+        background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px; /* Increased from 16px to 20px */
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      
+      .toggle-button:hover {
+        border-color: #2563eb;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+      
+      .toggle-button.active {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        border-color: #f59e0b;
+        color: white;
+        box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+      }
+      
+      .toggle-button.active:hover {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        border-color: #d97706;
+      }
+      
+      /* Camera button specific alignment fix */
+      #cameraToggleButton {
+        position: relative;
+      }
+      
+      #cameraToggleButton::before {
+        content: '📷';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -64%); /* Further increased upward adjustment */
+        font-size: 20px;
+        line-height: 1;
+      }
+      
+      /* Hide the original emoji text */
+      #cameraToggleButton {
+        font-size: 0;
+      }
+      
+      /* Audio button specific styling */
+      #audioToggleButton.active {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        border-color: #f59e0b;
+        color: white;
+        box-shadow: 0 4px 8px rgba(245, 158, 11, 0.3);
+      }
+      
+      #audioToggleButton.active:hover {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        border-color: #d97706;
+      }
+      
+      /* VAD button styling - Changed icon and subtle click feedback */
+      #vadButton {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #e5e7eb;
+        background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+        color: #374151;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px; /* Increased from 16px to 20px */
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      
+      #vadButton:hover {
+        border-color: #d1d5db;
+        background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+        transform: translateY(-1px);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+      }
+      
+      #vadButton:active {
+        transform: translateY(0px);
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      }
+      
+      #vadButton:disabled {
+        background: #f3f4f6;
+        border-color: #d1d5db;
+        color: #9ca3af;
+        cursor: not-allowed;
+        opacity: 0.6;
+        transform: none;
+        box-shadow: none;
+      }
+      
+      /* Menu button styling */
+      #menuButton {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid #e5e7eb;
+        background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+        color: #374151;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        position: relative;
+      }
+      
+      #menuButton:hover {
+        border-color: #2563eb;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      /* Menu dropdown styling */
+      .menu-dropdown {
+        position: absolute;
+        bottom: 50px;
+        right: 0;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        min-width: 180px;
+        z-index: 1002;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.15s ease; /* Faster transition */
+        pointer-events: none;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+
+      .menu-dropdown.show {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+      }
+
+      .menu-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #374151;
+        transition: background-color 0.2s ease;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      .menu-item:last-child {
+        border-bottom: none;
+      }
+
+      .menu-item:hover {
+        background-color: #f8fafc;
+        color: #0d004d;
+      }
+
+      .menu-item:first-child {
+        border-radius: 8px 8px 0 0;
+      }
+
+      .menu-item:last-child {
+        border-radius: 0 0 8px 8px;
+      }
+
+      .menu-item.active {
+        background-color: #eff6ff;
+        color: #0d004d;
+        font-weight: 600;
+      }
+
+      /* Initial state - PDF viewer hidden */
+      .content-area.no-pdf {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 8px;
+        margin: 20px;
+      }
+
+      .welcome-message {
+        text-align: center;
+        color: #64748b;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+
+      .welcome-message h2 {
+        font-size: 2em;
+        font-weight: 600;
+        color: #0d004d;
+        margin-bottom: 16px;
+      }
+
+      .welcome-message p {
+        font-size: 1.1em;
+        font-weight: 400;
+        line-height: 1.6;
+        max-width: 500px;
+        margin: 0 auto;
+      }
+      
+      /* Content area styling */
+      .content-area h3 {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 600;
+      }
+      
+      .content-area p {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-weight: 400;
+      }
+      
+      /* Tooltips and other text elements */
+      [title] {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      
+      @keyframes pulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+        }
+        70% {
+          box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+      }
+
+      .container {
+        max-width: 540px;
+        margin: 40px auto 0 auto;
+        background: #fff;
+        border-radius: 18px;
+        box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+        padding: 32px 32px 48px 32px;
+        position: relative;
+        min-height: 400px;
+        box-sizing: border-box;
+        max-height: calc(100vh - 80px);
+        overflow-y: auto;
+      }
+      .main-container {
+        padding-bottom: 0 !important; /* Remove extra bottom padding now that bottom-controls are gone */
+      }
+      .back-link {
+        display: inline-flex;
+        align-items: center;
+        color: #0073b1;
+        text-decoration: none;
+        font-size: 1em;
+        font-weight: 600;
+        margin-bottom: 24px;
+        background: #f6f8fa;
+        padding: 6px 18px 6px 0;
+        border-radius: 16px;
+        box-shadow: 0 1px 4px #eaf1fa;
+        border: 1px solid #e0e7ef;
+        transition: background 0.15s, color 0.15s;
+        position: static;
+        top: unset;
+        left: unset;
+        z-index: 10;
+      }
+      .back-link:hover { text-decoration: underline; background: #e5eaf2; color: #005580; }
+      .scenario-title {
+        font-size: 1.35em;
+        font-weight: 700;
+        margin-bottom: 2px;
+        margin-top: 0;
+        color: #222;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        letter-spacing: 0.01em;
+      }
+      .scenario-author {
+        color: #888;
+        font-size: 1em;
+        margin-bottom: 24px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        text-align: left;
+      }
+      .section-title {
+        font-weight: 700;
+        margin-top: 28px;
+        margin-bottom: 8px;
+        font-size: 1.08em;
+        color: #222;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      .scenario-desc, .scenario-success, .scenario-between, .scenario-character-desc {
+        font-size: 1.08em;
+        color: #222;
+        margin-bottom: 10px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      .scenario-success ul {
+        margin: 0 0 0 18px;
+        padding: 0;
+      }
+      .who-between {
+        background: #f6f8fa;
+        border-radius: 14px;
+        padding: 18px 18px 0 18px;
+        margin-bottom: 18px;
+        border: 1px solid #e5eaf2;
+      }
+      .character-row {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ececec;
+      }
+      .character-row:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
+      .avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: #e0e7ef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-right: 16px;
+        color: #444;
+      }
+      .character-info {
+        flex: 1;
+      }
+      .character-name {
+        font-weight: 700;
+        color: #222;
+        font-size: 1.08em;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      .character-role {
+        color: #888;
+        font-size: 0.98em;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      .pill {
+        background: #e5eaf2;
+        color: #3b5b8c;
+        border-radius: 12px;
+        font-size: 0.95em;
+        padding: 2px 10px;
+        margin-left: 8px;
+        font-weight: 600;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      .character-desc {
+        background: #fff;
+        border-radius: 8px;
+        padding: 14px 14px 18px 14px;
+        border: none;
+        font-size: 1.05em;
+        color: #444;
+        margin-top: 8px;
+        margin-bottom: 0;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      .bottom-bar {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 16px;
+        margin-top: 36px;
+      }
+      .btn-share, .btn-start {
+        border: none;
+        border-radius: 22px;
+        padding: 10px 28px;
+        font-size: 1em;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border 0.15s;
+        box-shadow: 0 1px 2px #eaf1fa;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      .btn-share {
+        background: #fff;
+        color: #0073b1;
+        border: 1.5px solid #d0d0d0;
+      }
+      .btn-share:hover {
+        background: #f3f6fa;
+        color: #005580;
+      }
+      .btn-start {
+        background: #0073b1;
+        color: #fff;
+        border: none;
+      }
+      .btn-start:hover {
+        background: #005580;
+      }
+      .powered-by {
+        color: #888;
+        font-size: 0.98em;
+        margin-top: 24px;
+        text-align: left;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      .created-by {
+        color: #888;
+        font-size: 0.98em;
+        margin-top: 32px;
+        text-align: center;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+      }
+      @media (max-width: 700px) {
+        .container {
+          padding: 16px 2vw 18px 2vw;
+        }
+        .back-link {
+          left: 8px;
+        }
+      }
+
+      /* Feedback page specific styles */
+      .feedback-root {
+        min-height: 100vh;
+        background: #fafbfc;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        padding: 48px 0 48px 0;
+        margin: 0;
+        overflow-y: auto;
+        max-height: 100vh;
+        box-sizing: border-box;
+      }
+      .feedback-header {
+        padding: 40px 0 0 0;
+        max-width: 700px;
+        margin: 0 auto;
+      }
+      .feedback-section, .feedback-course-section, .detailed-feedback-section {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 1px 4px #eaf1fa;
+        padding: 32px 40px 28px 40px;
+        margin: 0 auto 28px auto;
+        max-width: 700px;
+        box-sizing: border-box;
+      }
+      .feedback-title, .feedback-desc {
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+      @media (max-width: 700px) {
+        .feedback-header {
+          padding: 24px 0 0 0;
+        }
+        .feedback-section, .feedback-course-section, .detailed-feedback-section {
+          padding: 18px 8px 14px 8px;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Pearson Title Bar -->
+    <div class="title-bar">
+      <img src="/static/images/pearson-logo.png" alt="Pearson" class="pearson-logo">
+      <h1>Scriptly - AI Role Play to develop soft skills</h1>
+    </div>
+    
+    <div class="main-container">
+      <!-- Left content area - Initially shows welcome message -->
+      <div class="content-area no-pdf" id="contentArea">
+        <!-- Panel collapse/expand button -->
+        <button type="button" id="panelCollapseButton" class="panel-collapse-button" title="Collapse right panel">
+          ❯
+        </button>
+        <!-- Dynamic content will be rendered here -->
+        <div id="mainFlowContainer"></div>
+        <!-- PDF Viewer will be initialized here when activated -->
+        <div id="pdfViewerContainer" style="display: none;"></div>
+        <!-- Add a container for the role play details page (deprecated, kept for legacy, hidden) -->
+        <div id="rolePlayDetailsContainer" style="display:none;"></div>
+        <!-- Role Details Container (hidden by default, deprecated) -->
+        <div id="roleDetailsContainer" style="display:none;"></div>
+        <!-- Conversation Container (hidden by default, deprecated) -->
+        <div id="conversationContainer" style="display:none;"></div>
+      </div>
+      
+      <!-- Right sidebar for chat and video -->
+      <div class="right-sidebar" id="rightSidebar">
+        <!-- Chat section -->
+        <div class="chat-section" id="chatSection">
+          <div class="chat-header">
+            <h3>💬 Chat History</h3>
+            <button type="button" id="chatMinimizeButton" class="minimize-button" title="Minimize chat history">
+              ➖
+            </button>
+          </div>
+          <div class="chat-content" id="chatContent">
+            <div id="messages"></div>
+            <div class="chat-status" id="chatStatus">Ready to connect...</div>
+          </div>
+        </div>
+        
+        <!-- Video section - Removed titles to save space -->
+        <div class="video-section" id="videoSection">
+          <div class="video-header">
+            <span class="video-title">📹 Video Preview</span>
+            <button type="button" id="videoMinimizeButton" class="minimize-button" title="Minimize video preview">
+              ➖
+            </button>
+          </div>
+          <div class="video-content" id="videoContent">
+            <div id="videoStatus">No video source active</div>
+            <video id="videoPreview" autoplay muted></video>
+            <canvas id="captureCanvas" style="display: none;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom controls -->
+    <!-- Removed bottom-controls panel as requested -->
+    <!--
+    <div class="bottom-controls" style="display: none;">
+      <div class="controls-center">
+        <div class="media-controls">
+          <button type="button" id="audioToggleButton" class="toggle-button" title="Click to start/stop audio">🎙️</button>
+          <button type="button" id="cameraToggleButton" class="toggle-button" title="Click to start/stop camera">
+          </button>
+          <button type="button" id="screenToggleButton" class="toggle-button" title="Click to start/stop screen share">
+            🖥️
+          </button>
+          <button type="button" id="vadButton" title="Calibrate Voice Activity Detection">
+            🔧
+          </button>
+          <button type="button" id="menuButton" title="Open menu">
+            ⋮
+            <div class="menu-dropdown" id="menuDropdown">
+              <div class="menu-item" id="pdfViewerMenuItem">
+                📄 PDF Viewer
+              </div>
+              <div class="menu-item" id="settingsMenuItem">
+                ⚙️ Settings
+              </div>
+              <div class="menu-item" id="helpMenuItem">
+                ❓ Help
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+      
+      <div class="controls-right">
+        <form id="messageForm">
+          <input type="text" id="message" name="message" />
+          <button type="submit" id="sendButton" disabled>➤</button>
+        </form>
+      </div>
+    </div>
+    -->
+    
+    <!-- Hidden capture rate setting (always 1 fps) -->
+    <select id="captureRate" style="display: none;">
+      <option value="1000" selected>1 fps</option>
+    </select>
+
+    <!-- Add this script at the end of the welcome-message div, before closing it -->
+    <script>
+      // Remove this DOMContentLoaded wrapper, as the script is already at the end of the body and this can block immediate execution in some browsers
+      // document.addEventListener('DOMContentLoaded', function() {
+        // SPA state: 'create', 'details', 'conversation'
+        let spaState = 'create';
+        let scenarioData = null;
+        const mainFlowContainer = document.getElementById('mainFlowContainer');
+
+        function renderCreateRole() {
+          spaState = 'create';
+          mainFlowContainer.innerHTML = `
+            <div class="welcome-message" id="welcomeMessage" style="text-align:center; margin-top:60px;">
+              <h1 style="font-size:2em; font-weight:700; margin-bottom:0.2em; background: linear-gradient(90deg,#222 40%,#0073b1 60%,#7b2ff2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Practice everyday work conversations with<br><span style="background: linear-gradient(90deg,#0073b1 40%,#7b2ff2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI-powered role play</span></h1>
+              <div style="font-size:1.2em; color:#555; margin-bottom:32px;">We'll use AI to get you started. You can edit the details in the next step.</div>
+              <textarea id="rolePlayTextArea" style="width:60%;min-height:80px;margin:0 auto 24px auto;display:block;padding:18px 20px;font-size:1.2em;border-radius:18px;border:1.5px solid #222;box-shadow:0 2px 16px #eaf1fa;"></textarea>
+              <div id="rolePlayLoading" style="display:none;margin:0 auto 12px auto;font-size:0.98em;color:#0073b1;font-weight:400;letter-spacing:0.01em;">Building your role play…</div>
+              <button id="createRolePlayBtn" style="margin:0 auto 32px auto;display:block;background:#0073b1;color:#fff;border:none;border-radius:32px;padding:10px 28px;font-weight:600;font-size:1em;cursor:pointer;box-shadow:0 2px 8px #eaf1fa;">Create role play</button>
+              <div style="margin:0 auto 0 auto;max-width:700px;">
+                <div style="font-weight:600;color:#444;margin-bottom:14px;font-size:0.95em;">Suggestions:</div>
+                <div id="rolePlaySuggestions" style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;">
+                  <button class="suggestion-btn" data-suggestion="Pitch a project to an executive" style="padding:8px 18px;border-radius:32px;border:1.5px solid #bbb;background:#fff;cursor:pointer;font-size:0.95em;">Pitch a project to an executive</button>
+                  <button class="suggestion-btn" data-suggestion="Give feedback on a presentation" style="padding:8px 18px;border-radius:32px;border:1.5px solid #bbb;background:#fff;cursor:pointer;font-size:0.95em;">Give feedback on a presentation</button>
+                  <button class="suggestion-btn" data-suggestion="Negotiate my salary" style="padding:8px 18px;border-radius:32px;border:1.5px solid #bbb;background:#fff;cursor:pointer;font-size:0.95em;">Negotiate my salary</button>
+                  <button class="suggestion-btn" data-suggestion="Practice saying no to unrealistic expectations" style="padding:8px 18px;border-radius:32px;border:1.5px solid #bbb;background:#fff;cursor:pointer;font-size:0.95em;">Practice saying no to unrealistic expectations</button>
+                  <button class="suggestion-btn" data-suggestion="Handle a challenging customer" style="padding:8px 18px;border-radius:32px;border:1.5px solid #bbb;background:#fff;cursor:pointer;font-size:0.95em;">Handle a challenging customer</button>
+                  <button class="suggestion-btn" data-suggestion="Cold call a busy decision maker" style="padding:8px 18px;border-radius:32px;border:1.5px solid #bbb;background:#fff;cursor:pointer;font-size:0.95em;">Cold call a busy decision maker</button>
+                </div>
+              </div>
+            </div>
+          `;
+          // Attach event listeners after rendering
+          const suggestions = mainFlowContainer.querySelectorAll('.suggestion-btn');
+          const textarea = mainFlowContainer.querySelector('#rolePlayTextArea');
+          suggestions.forEach(btn => {
+            btn.addEventListener('click', function() {
+              textarea.value = btn.getAttribute('data-suggestion');
+              textarea.focus();
+            });
+          });
+          const createBtn = mainFlowContainer.querySelector('#createRolePlayBtn');
+          const loadingDiv = mainFlowContainer.querySelector('#rolePlayLoading');
+          const welcomeDiv = mainFlowContainer.querySelector('#welcomeMessage');
+          // Clear error message when user starts typing
+          textarea.addEventListener('input', function() {
+            const existingError = mainFlowContainer.querySelector('#rolePlayError');
+            if (existingError) existingError.remove();
+          });
+          createBtn.addEventListener('click', async function() {
+            let scenarioText = textarea.value.trim();
+            // Validation: Check if textarea is empty
+            if (!scenarioText) {
+              // Show error message
+              const existingError = mainFlowContainer.querySelector('#rolePlayError');
+              if (existingError) existingError.remove();
+              const errorDiv = document.createElement('div');
+              errorDiv.id = 'rolePlayError';
+              errorDiv.style.cssText = 'color:#d73527;font-size:1em;margin:8px auto 16px auto;text-align:center;font-weight:500;';
+              errorDiv.textContent = 'Error: This field is required.';
+              textarea.parentNode.insertBefore(errorDiv, createBtn);
+              textarea.focus();
+              return;
+            }
+            // Clear any existing error
+            const existingError = mainFlowContainer.querySelector('#rolePlayError');
+            if (existingError) existingError.remove();
+            // Show loading
+            loadingDiv.style.display = 'block';
+            createBtn.disabled = true;
+            try {
+              const resp = await fetch('/roleplay', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: scenarioText })
+              });
+              const scenarioData = await resp.json();
+              console.log('LLM Response:', scenarioData); // Debug log
+              loadingDiv.style.display = 'none';
+              renderRoleDetails(scenarioData);
+            } catch (e) {
+              loadingDiv.style.display = 'none';
+              createBtn.disabled = false;
+              const existingError = mainFlowContainer.querySelector('#rolePlayError');
+              if (existingError) existingError.remove();
+              const errorDiv = document.createElement('div');
+              errorDiv.id = 'rolePlayError';
+              errorDiv.style.cssText = 'color:#d73527;font-size:1em;margin:8px auto 16px auto;text-align:center;font-weight:500;';
+              errorDiv.textContent = 'Failed to create role play. Please try again.';
+              textarea.parentNode.insertBefore(errorDiv, createBtn);
+            }
+          });
+        }
+
+        function renderRoleDetails(data) {
+          spaState = 'details';
+          scenarioData = data;
+          mainFlowContainer.innerHTML = `
+            <style>
+              .container {
+                max-width: 650px;
+                margin: 48px auto 0 auto;
+                background: #fff;
+                border-radius: 18px;
+                box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+                padding: 32px 32px 40px 32px;
+                position: relative;
+                min-height: 400px;
+                box-sizing: border-box;
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+              }
+              .back-link {
+                display: inline-flex;
+                align-items: center;
+                color: #0073b1;
+                text-decoration: none;
+                font-size: 1em;
+                font-weight: 600;
+                margin-bottom: 24px;
+                background: #f6f8fa;
+                padding: 6px 18px 6px 0;
+                border-radius: 16px;
+                box-shadow: 0 1px 4px #eaf1fa;
+                border: 1px solid #e0e7ef;
+                transition: background 0.15s, color 0.15s;
+                position: static;
+                top: unset;
+                left: unset;
+                z-index: 10;
+              }
+              .back-link:hover { text-decoration: underline; background: #e5eaf2; color: #005580; }
+              .scenario-title {
+                font-size: 1.35em;
+                font-weight: 700;
+                margin-bottom: 2px;
+                margin-top: 0;
+                color: #222;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                letter-spacing: 0.01em;
+              }
+              .scenario-author {
+                color: #888;
+                font-size: 1em;
+                margin-bottom: 24px;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                text-align: left;
+              }
+              .section-title {
+                font-weight: 700;
+                margin-top: 28px;
+                margin-bottom: 8px;
+                font-size: 1.08em;
+                color: #222;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              .scenario-desc, .scenario-success, .scenario-between, .scenario-character-desc {
+                font-size: 1.08em;
+                color: #222;
+                margin-bottom: 10px;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              .scenario-success ul {
+                margin: 0 0 0 18px;
+                padding: 0;
+              }
+              .who-between {
+                background: #f6f8fa;
+                border-radius: 14px;
+                padding: 18px 18px 0 18px;
+                margin-bottom: 18px;
+                border: 1px solid #e5eaf2;
+              }
+              .character-row {
+                display: flex;
+                align-items: center;
+                margin-bottom: 10px;
+                padding-bottom: 10px;
+                border-bottom: 1px solid #ececec;
+              }
+              .character-row:last-child {
+                border-bottom: none;
+                margin-bottom: 0;
+                padding-bottom: 0;
+              }
+              .avatar {
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                background: #e0e7ef;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+                margin-right: 16px;
+                color: #444;
+              }
+              .character-info {
+                flex: 1;
+              }
+              .character-name {
+                font-weight: 700;
+                color: #222;
+                font-size: 1.08em;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              .character-role {
+                color: #888;
+                font-size: 0.98em;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              .pill {
+                background: #e5eaf2;
+                color: #3b5b8c;
+                border-radius: 12px;
+                font-size: 0.95em;
+                padding: 2px 10px;
+                margin-left: 8px;
+                font-weight: 600;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              .character-desc {
+                background: #fff;
+                border-radius: 8px;
+                padding: 14px 14px 18px 14px;
+                border: none;
+                font-size: 1.05em;
+                color: #444;
+                margin-top: 8px;
+                margin-bottom: 0;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              .bottom-bar {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                gap: 16px;
+                margin-top: 36px;
+              }
+              .btn-share, .btn-start {
+                border: none;
+                border-radius: 22px;
+                padding: 10px 28px;
+                font-size: 1em;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background 0.15s, color 0.15s, border 0.15s;
+                box-shadow: 0 1px 2px #eaf1fa;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              .btn-share {
+                background: #fff;
+                color: #0073b1;
+                border: 1.5px solid #d0d0d0;
+              }
+              .btn-share:hover {
+                background: #f3f6fa;
+                color: #005580;
+              }
+              .btn-start {
+                background: #0073b1;
+                color: #fff;
+                border: none;
+              }
+              .btn-start:hover {
+                background: #005580;
+              }
+              .powered-by {
+                color: #888;
+                font-size: 0.98em;
+                margin-top: 24px;
+                text-align: left;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              .created-by {
+                color: #888;
+                font-size: 0.98em;
+                margin-top: 32px;
+                text-align: center;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              @media (max-width: 700px) {
+                .container {
+                  padding: 16px 2vw 18px 2vw;
+                }
+                .back-link {
+                  left: 8px;
+                }
+              }
+
+              /* Feedback page specific styles */
+              .feedback-root {
+                min-height: 100vh;
+                background: #fafbfc;
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                padding: 48px 0 48px 0;
+                margin: 0;
+                overflow-y: auto;
+                max-height: 100vh;
+                box-sizing: border-box;
+              }
+              .feedback-header {
+                padding: 40px 0 0 0;
+                max-width: 700px;
+                margin: 0 auto;
+              }
+              .feedback-section, .feedback-course-section, .detailed-feedback-section {
+                background: #fff;
+                border-radius: 14px;
+                box-shadow: 0 1px 4px #eaf1fa;
+                padding: 32px 40px 28px 40px;
+                margin: 0 auto 28px auto;
+                max-width: 700px;
+                box-sizing: border-box;
+              }
+              .feedback-title, .feedback-desc {
+                padding-left: 8px;
+                padding-right: 8px;
+              }
+              @media (max-width: 700px) {
+                .feedback-header {
+                  padding: 24px 0 0 0;
+                }
+                .feedback-section, .feedback-course-section, .detailed-feedback-section {
+                  padding: 18px 8px 14px 8px;
+                }
+              }
+            </style>
+            <div class="container">
+              <a href="#" class="back-link" id="backToCreate">&larr; Create role play</a>
+              <div class="scenario-title">${data.title || 'Role Play Scenario'}</div>
+              <div class="scenario-author">By You</div>
+              <div class="section-title">What this conversation is about</div>
+              <div class="scenario-desc">${data.description || ''}</div>
+              <div class="section-title">What makes it successful</div>
+              <div class="scenario-success"><ul>${(data.success_criteria||[]).map(c=>`<li>${c}</li>`).join('')}</ul></div>
+              <div class="section-title">Who the conversation is between</div>
+              <div class="who-between">
+                <div class="character-row">
+                  <div class="avatar">${data.user_avatar||'👤'}</div>
+                  <div class="character-info">
+                    <span class="character-name">${data.user_name||'You'}</span>
+                    <span class="pill">Me</span><br>
+                    <span class="character-role">${data.user_role||''}</span>
+                  </div>
+                </div>
+                <div class="character-row">
+                  <div class="avatar">${data.ai_avatar||'🧑‍💼'}</div>
+                  <div class="character-info">
+                    <span class="character-name">${data.ai_name||'AI'}</span>
+                    <span class="pill">AI</span><br>
+                    <span class="character-role">${data.ai_role||''}</span>
+                  </div>
+                </div>
+                <div class="character-desc">${data.ai_description||''}</div>
+              </div>
+              <div class="bottom-bar">
+                <button class="btn-share" id="shareBtn">Share</button>
+                <button class="btn-start" id="startConversationBtn">Start</button>
+              </div>
+              <div class="powered-by">This is powered by AI and may make mistakes. <a href="#" style="color:#2563eb;">Learn more</a></div>
+              <div class="created-by">By AI Learning Coach</div>
+            </div>
+          `;
+          mainFlowContainer.querySelector('#backToCreate').onclick = function() { renderCreateRole(); };
+          mainFlowContainer.querySelector('#startConversationBtn').onclick = function() { renderConversation(scenarioData); };
+        }
+
+        function renderConversation(data) {
+          spaState = 'conversation';
+          scenarioData = data;
+          mainFlowContainer.innerHTML = `
+            <style>
+              body, .mainFlowContainer, .conversation-root {
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                background: linear-gradient(120deg, #f8fafc 0%, #e9f0f7 100%);
+                margin: 0;
+                color: #222;
+              }
+              .conversation-root {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                min-height: 100vh;
+                width: 100vw;
+                padding-top: 48px;
+                box-sizing: border-box;
+                background: none;
+              }
+              .conversation-title {
+                font-size: 2em;
+                font-weight: 700;
+                margin-bottom: 0.2em;
+                color: #222;
+                text-align: center;
+              }
+              .conversation-timer {
+                font-size: 1.1em;
+                color: #888;
+                text-align: center;
+                margin-bottom: 32px;
+              }
+              .conversation-card {
+                background: #fff;
+                border-radius: 18px;
+                box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+                padding: 36px 32px 32px 32px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 48px;
+                min-width: 420px;
+                max-width: 600px;
+                margin-bottom: 40px;
+              }
+              .conversation-avatar {
+                width: 80px;
+                height: 80px;
+                border-radius: 50%;
+                background: #e0e7ef;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 2.5em;
+                color: #444;
+                margin: 0 auto 12px auto;
+              }
+              .conversation-role {
+                font-size: 1.1em;
+                color: #888;
+                margin-bottom: 2px;
+                text-align: center;
+              }
+              .conversation-name {
+                font-weight: 700;
+                font-size: 1.15em;
+                color: #222;
+                text-align: center;
+                margin-bottom: 2px;
+              }
+              .conversation-ai-pill {
+                background: #e5eaf2;
+                color: #3b5b8c;
+                border-radius: 12px;
+                font-size: 0.95em;
+                padding: 2px 10px;
+                margin-left: 6px;
+                font-weight: 600;
+                display: inline-block;
+              }
+              .conversation-active-dot {
+                display: block;
+                width: 18px;
+                height: 6px;
+                background: #0073b1;
+                border-radius: 8px;
+                margin: 8px auto 0 auto;
+                opacity: 0.15;
+                transition: opacity 0.2s;
+              }
+              .conversation-avatar.active {
+                box-shadow: 0 0 0 4px #0073b133;
+                border: 2.5px solid #0073b1;
+                background: #e0f2fe;
+              }
+              .conversation-active-dot.active {
+                opacity: 1;
+                background: #0073b1;
+              }
+              .conversation-controls {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 18px;
+                margin: 0 auto 32px auto;
+                background: #fff;
+                border-radius: 32px;
+                box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+                padding: 12px 32px;
+                position: fixed;
+                left: 50%;
+                bottom: 36px;
+                transform: translateX(-50%);
+                z-index: 100;
+              }
+              .conversation-controls .toggle-button {
+                background: #d73527;
+                color: #fff;
+                border: none;
+                border-radius: 50%;
+                width: 48px;
+                height: 48px;
+                font-size: 1.6em;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 8px #eaf1fa;
+                cursor: pointer;
+                transition: background 0.15s;
+              }
+              .conversation-controls .toggle-button:hover {
+                background: #b91c1c;
+              }
+              .conversation-controls .end-btn {
+                background: #fff;
+                color: #d73527;
+                border: 1.5px solid #d73527;
+                border-radius: 22px;
+                padding: 10px 32px;
+                font-size: 1.13em;
+                font-weight: 700;
+                cursor: pointer;
+                margin-left: 12px;
+                transition: background 0.15s, color 0.15s, border 0.15s;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              .conversation-controls .end-btn:hover {
+                background: #fbeaea;
+              }
+              .conversation-powered {
+                color: #888;
+                font-size: 0.98em;
+                margin-top: 24px;
+                text-align: center;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              @media (max-width: 700px) {
+                .conversation-card {
+                  flex-direction: column;
+                  min-width: 0;
+                  max-width: 98vw;
+                  padding: 24px 8px;
+                }
+                .conversation-controls {
+                  flex-direction: column;
+                  gap: 12px;
+                  padding: 12px 8px;
+                }
+              }
+            </style>
+            <div class="conversation-root">
+              <div class="conversation-title">${data.title || 'Conversation'}</div>
+              <div class="conversation-timer" id="conversationTimer">00:00</div>
+              <div class="conversation-card">
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+                  <div class="conversation-avatar" id="userAvatar">${(data.user_avatar||'👤')}</div>
+                  <div class="conversation-name">${data.user_name||'You'}</div>
+                  <div class="conversation-role">${data.user_role||''}</div>
+                  <span class="conversation-active-dot" id="userActiveDot"></span>
+                </div>
+                <div style="flex:1;display:flex;flex-direction:column;align-items:center;">
+                  <div class="conversation-avatar" id="aiAvatar">${(data.ai_avatar||'🧑‍💼')}</div>
+                  <div class="conversation-name">${data.ai_name||'Sam'} <span class="conversation-ai-pill">AI</span></div>
+                  <div class="conversation-role">${data.ai_role||''}</div>
+                  <span class="conversation-active-dot" id="aiActiveDot"></span>
+                </div>
+              </div>
+              <div class="conversation-controls">
+                <button type="button" id="audioToggleButton" class="toggle-button" title="Click to start/stop audio">🎙️</button>
+                <button class="end-btn" id="convEndBtn">End session</button>
+              </div>
+              <div class="conversation-powered">This conversation is powered by AI. Pearson does not store or use your audio for training purposes.</div>
+            </div>
+          `;
+          // Timer logic
+          let seconds = 0;
+          const timerEl = mainFlowContainer.querySelector('#conversationTimer');
+          if (timerEl) {
+            setInterval(() => {
+              seconds++;
+              const min = String(Math.floor(seconds/60)).padStart(2,'0');
+              const sec = String(seconds%60).padStart(2,'0');
+              timerEl.textContent = `${min}:${sec}`;
+            }, 1000);
+          }
+          mainFlowContainer.querySelector('#convEndBtn').onclick = function() { 
+            // End the role-play session and start analysis
+            endRolePlaySession(); 
+          };
+          
+          // Ensure audio state is preserved when role-play interface is created
+          setTimeout(() => {
+            if (typeof updateAllAudioToggleButtons === 'function' && typeof isAudioActive !== 'undefined') {
+              updateAllAudioToggleButtons(isAudioActive);
+            }
+          }, 100);
+          
+          // Initialize the role-play conversation with context
+          initializeRolePlayConversation(data);
+
+          // Automatically activate audio toggle button after page load
+          setTimeout(() => {
+            const audioBtn = document.getElementById('audioToggleButton');
+            if (audioBtn && !audioBtn.classList.contains('active')) {
+              audioBtn.click();
+              console.log('🔊 Audio toggle button activated automatically after page load');
+              // After audio is started, play initializeRolePlayConversation
+              setTimeout(() => {
+                initializeRolePlayConversation(data);
+                console.log('▶️ initializeRolePlayConversation called after audio start');
+                // After context, send the ready message
+                const aiName = data.ai_name || 'AI';
+                const readyMsg = `I'm ready to start the role-play as ${aiName}.`;
+                if (typeof sendMessage === 'function') {
+                  sendMessage({ mime_type: 'text/plain', data: readyMsg });
+                  console.log('💬 Sent initial ready message to start the role-play:', readyMsg);
+                }
+              }, 800); // Wait a bit for audio to fully initialize
+            } else {
+              // If already active, just call initializeRolePlayConversation immediately
+              initializeRolePlayConversation(data);
+              console.log('▶️ initializeRolePlayConversation called (audio already active)');
+              const aiName = data.ai_name || 'AI';
+              const readyMsg = `I'm ready to start the role-play as ${aiName}.`;
+              if (typeof sendMessage === 'function') {
+                sendMessage({ mime_type: 'text/plain', data: readyMsg });
+                console.log('💬 Sent initial ready message to start the role-play:', readyMsg);
+              }
+            }
+          }, 700);
+          
+          // Start audio automatically on conversation page load
+          if (typeof startAudio === 'function' && !isAudioActive) {
+            setTimeout(() => {
+              try {
+                startAudio();
+                is_audio = true;
+                isAudioActive = true;
+                if (typeof updateAllAudioToggleButtons === 'function') {
+                  updateAllAudioToggleButtons(true);
+                }
+                console.log('🔊 Audio started automatically on conversation page load');
+                // Immediately trigger VAD calibration if available
+                if (typeof performVAD === 'function') {
+                  // Simulate a short silence buffer to calibrate VAD
+                  const silence = new Float32Array(16000); // 1 second of silence at 16kHz
+                  performVAD(silence);
+                  console.log('🎤 VAD called immediately after audio start');
+                }
+                // If VAD needs to be triggered again for Presentation Feedback Simulation, do it here
+                if (document.querySelector('.conversation-title')?.textContent?.includes('Presentation Feedback Simulation')) {
+                  if (typeof performVAD === 'function') {
+                    const silence = new Float32Array(16000);
+                    performVAD(silence);
+                    console.log('🎤 VAD called again for Presentation Feedback Simulation');
+                  }
+                }
+              } catch (e) {
+                console.error('❌ Failed to auto-start audio or VAD:', e);
+              }
+            }, 500);
+          }
+        }
+
+        function renderPreparingPage() {
+          mainFlowContainer.innerHTML = `
+            <style>
+              .preparing-root {
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(120deg, #f8fafc 0%, #e9f0f7 100%);
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                padding-top: 48px;
+                padding-bottom: 48px;
+              }
+              .preparing-card {
+                background: #fff;
+                border-radius: 18px;
+                box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+                padding: 56px 64px 48px 64px;
+                min-width: 420px;
+                max-width: 600px;
+                margin-bottom: 40px;
+                text-align: center;
+              }
+              .preparing-star {
+                font-size: 2.2em;
+                color: #2563eb;
+                margin-bottom: 18px;
+                display: block;
+              }
+              .preparing-step {
+                font-size: 1.25em;
+                color: #222;
+                margin: 18px 0 0 0;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              .preparing-step.active {
+                font-weight: 700;
+              }
+              .preparing-step.inactive {
+                color: #bbb;
+                font-weight: 400;
+              }
+              .preparing-controls {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 18px;
+                margin: 0 auto 32px auto;
+                background: #fff;
+                border-radius: 32px;
+                box-shadow: 0 2px 16px rgba(0,0,0,0.07);
+                padding: 12px 32px;
+                position: static !important;
+                margin-bottom: 36px;
+                left: unset;
+                bottom: unset;
+                transform: none;
+                z-index: 100;
+              }
+              .preparing-controls .audio-btn {
+                background: #e5eaf2;
+                color: #888;
+                border: none;
+                border-radius: 50%;
+                width: 48px;
+                height: 48px;
+                font-size: 1.6em;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 8px #eaf1fa;
+                cursor: not-allowed;
+                opacity: 0.7;
+              }
+              .preparing-controls .toggle-btn {
+                background: #fff;
+                border: 2px solid #bbb;
+                border-radius: 50%;
+                width: 48px;
+                height: 48px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.4em;
+                color: #bbb;
+                cursor: not-allowed;
+                opacity: 0.7;
+              }
+              .preparing-controls .speak-btn {
+                background: #f3f6fa;
+                color: #bbb;
+                border: none;
+                border-radius: 22px;
+                padding: 10px 32px;
+                font-size: 1.13em;
+                font-weight:  700;
+                cursor: not-allowed;
+                margin-left: 12px;
+                transition: background 0.15s, color 0.15s, border 0.15s;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                opacity: 0.7;
+              }
+              .preparing-powered {
+                color: #888;
+                font-size: 0.98em;
+                margin-top: 24px;
+                text-align: center;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              @media (max-width: 700px) {
+                .preparing-card {
+                  min-width: 0;
+                  max-width: 98vw;
+                  padding: 24px 8px;
+                }
+                .preparing-controls {
+                  flex-direction: column;
+                  gap: 12px;
+                  padding: 12px 8px;
+                }
+              }
+            </style>
+            <div class="preparing-root">
+              <div class="preparing-card">
+                <span class="preparing-star">★</span>
+                <div class="preparing-step">Analyzing your conversation</div>
+                <div class="preparing-step">Generating your feedback</div>
+                <div class="preparing-step">Personalizing your insights</div>
+                <div class="preparing-step active">Preparing helpful suggestions</div>
+                <div class="preparing-step inactive">Finalizing your results</div>
+              </div>
+              <div class="preparing-powered">This conversation is powered by AI. Pearson does not store or use your audio for training purposes.</div>
+            </div>
+          `;
+          // No automatic transition - wait for real AI analysis results
+        }
+
+        function renderFeedbackPage(analysisResult) {
+          // Only render if we have real analysis results
+          if (!analysisResult || !analysisResult.strengths || !analysisResult.improvements) {
+            console.error("❌ Cannot render feedback page without valid analysis results");
+            return;
+          }
+          
+          const feedbackData = analysisResult;
+          
+          mainFlowContainer.innerHTML = `
+            <style>
+              .feedback-root {
+                min-height: 100vh;
+                background: #fafbfc;
+                font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+                padding: 48px 0 48px 0;
+                margin: 0;
+                overflow-y: auto;
+                padding-top: 48px;
+                max-height: 100vh;
+              }
+              .feedback-header {
+                padding: 40px 0 0 0;
+                max-width: 700px;
+                margin: 0 auto;
+              }
+              .feedback-title {
+                font-size: 1.35em;
+                font-weight: 700;
+                color: #222;
+                margin-bottom: 0.2em;
+              }
+              .feedback-desc {
+                color: #444;
+                font-size: 1.08em;
+                margin-bottom: 32px;
+              }
+              .feedback-btn {
+                background: #2563eb;
+                color: #fff;
+                border: none;
+                border-radius: 22px;
+                padding: 10px 28px;
+                font-size: 1em;
+                font-weight: 600;
+                cursor: pointer;
+                margin-bottom: 32px;
+                box-shadow: 0 1px 2px #eaf1fa;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+                transition: background 0.15s;
+              }
+              .feedback-btn:hover {
+                background: #1746a2;
+              }
+              .feedback-section {
+                background: #fff;
+                border-radius: 14px;
+                box-shadow: 0 1px 4px #eaf1fa;
+                padding: 28px 32px 18px 32px;
+                margin: 0 auto 24px auto;
+                max-width: 700px;
+              }
+              .feedback-section-title {
+                font-weight: 700;
+                font-size: 1.08em;
+                margin-bottom: 12px;
+                color: #222;
+              }
+              .feedback-list {
+                margin: 0 0 0 18px;
+                padding: 0;
+                color: #222;
+                font-size: 1.08em;
+              }
+              .feedback-list li {
+                margin-bottom: 8px;
+              }
+              .feedback-generated {
+                color: #888;
+                font-size: 0.98em;
+                margin-top: 18px;
+                text-align: left;
+                font-family: 'Plus Jakarta Sans', sans-serif;
+              }
+              .feedback-course-section {
+                background: #fff;
+                border-radius: 14px;
+                box-shadow: 0 1px 4px #eaf1fa;
+                padding: 24px 32px 18px 32px;
+                margin: 0 auto 24px auto;
+                max-width: 700px;
+              }
+              .feedback-course-title {
+                font-weight: 700;
+                font-size: 1.08em;
+                margin-bottom: 12px;
+                color: #222;
+              }
+              .feedback-course-card {
+                display: flex;
+                align-items: center;
+                gap: 18px;
+                background: #f6f8fa;
+                border-radius: 8px;
+                padding: 12px 18px;
+              }
+              .feedback-course-img {
+                width: 90px;
+                height: 60px;
+                border-radius: 8px;
+                object-fit: cover;
+                background: #e0e7ef;
+              }
+              .feedback-course-info {
+                flex: 1;
+              }
+              .feedback-course-label {
+                font-size: 0.95em;
+                color: #888;
+                margin-bottom: 2px;
+              }
+              .feedback-course-name {
+                font-weight: 700;
+                color: #222;
+                font-size: 1.08em;
+                margin-bottom: 2px;
+              }
+              .feedback-course-duration {
+                font-size: 0.98em;
+                color: #888;
+              }
+              .detailed-feedback-section {
+                background: #fff;
+                border-radius: 14px;
+                box-shadow: 0  1px 4px #eaf1fa;
+                padding: 28px 32px 18px 32px;
+                margin: 0 auto 24px auto;
+                max-width: 700px;
+              }
+              .detailed-feedback-content {
+                color: #222;
+                font-size: 1.08em;
+                line-height: 1.6;
+                margin-bottom: 12px;
+              }
+            </style>
+            <div class="feedback-root">
+              <div class="feedback-header">
+                <div class="feedback-title">Role play feedback</div>
+                <div class="feedback-title" style="font-size:1.2em; font-weight:600; margin-bottom:0.2em;">${scenarioData?.title || 'Professional Role Play Session'}</div>
+                <div class="feedback-desc">Review your personalized feedback and insights on your role play conversation. Try adjusting your strategy and role playing again to practice new techniques to grow and evolve your skills.</div>
+                <button class="feedback-btn" id="practiceAgainBtn">Practice again</button>
+              </div>
+              <div class="feedback-section">
+                <div class="feedback-section-title">Strengths</div>
+                <ul class="feedback-list">
+                  ${feedbackData.strengths.map(strength => `<li>${strength}</li>`).join('')}
+                </ul>
+                <div class="feedback-section-title" style="margin-top:18px;">Areas of improvement</div>
+                <ul class="feedback-list">
+                  ${feedbackData.improvements.map(improvement => `<li>${improvement}</li>`).join('')}
+                </ul>
+                <div class="feedback-generated">Generated by AI based on your role play. <a href="#" style="color:#2563eb;">Learn more</a></div>
+              </div>
+              ${feedbackData.detailed_feedback ? `
+              <div class="detailed-feedback-section">
+                <div class="feedback-section-title">Detailed feedback</div>
+                <div class="detailed-feedback-content">${feedbackData.detailed_feedback}</div>
+                <div class="feedback-generated">Personalized analysis based on your conversation and scenario objectives.</div>
+              </div>
+              ` : ''}
+              <div class="feedback-course-section">
+                <div class="feedback-course-title">Personalized content recommendations based on your results</div>
+                <div class="feedback-course-card">
+                  <img class="feedback-course-img" src="https://media.licdn.com/dms/image/C4E0DAQF1Qw6QwQwQwA/learning-public-crop_288_512/0/1516797353942?e=2147483647&v=beta&t=1" alt="Course thumbnail" />
+                  <div class="feedback-course-info">
+                    <div class="feedback-course-label">Course</div>
+                    <div class="feedback-course-name">Engaging Your Virtual Audience</div>
+                    <div class="feedback-course-duration">35m</div>
+                  </div>
+                                              </div>
+              </div>
+                                                                                         </div>
+          `;
+          // Practice Again goes to details page
+          mainFlowContainer.querySelector('#practiceAgainBtn').onclick = function() { renderRoleDetails(scenarioData); };
+        }
+      // Ensure the first page (create role play) is displayed on SPA load
+      renderCreateRole();
+      
+      function endRolePlaySession() {
+        // After analysis is complete, always render feedback page
+        setTimeout(() => {
+          // Try to find if the analyzing/intermediate page is still visible
+          const preparingContainer = document.querySelector('.preparing-container');
+          if (!window.feedbackPageRendered && typeof renderFeedbackPage === 'function') {
+            let analysisResult = {
+              strengths: ['Good communication'],
+              improvements: ['Be more concise']
+            };
+            renderFeedbackPage(analysisResult);
+            window.feedbackPageRendered = true;
+            console.log('🔔 Forced feedback page render after session end');
+          } else if (preparingContainer) {
+            preparingContainer.innerHTML = '<div style="color:#d73527;font-size:1.1em;text-align:center;margin:40px auto;">Could not load feedback. Please try again.</div>';
+            console.log('⚠️ Feedback page not rendered, showing fallback message.');
+          } else {
+            console.log('ℹ️ Feedback page already rendered or function missing');
+          }
+        }, 5000); // fallback after 5s if not already rendered
+        console.log('🛑 endRolePlaySession called, waiting for feedback page...');
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+;;files to ignore
+settings.py
+test.py
+.env
+.DS_Store
+
+;;extensions to ignore
+*.log
+*.log*
+*.pot
+*.pyc
+
+;;directories to ignore
+.idea/
+venv
+.venv/
+google_search_agent/__pycache__/

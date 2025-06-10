@@ -1,0 +1,449 @@
+/**
+ * PDF Viewer Styles
+ * Matches the existing application design with Pearson branding
+ */
+
+.pdf-viewer-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  max-height: calc(100vh - 150px); /* Constrain the total height */
+}
+
+/* PDF Viewer Header with Minimize Button */
+.pdf-viewer-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pdf-viewer-header h3 {
+  margin: 0;
+  font-size: 0.9em;
+  color: #334155;
+  font-weight: 600;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Minimize button styling (reuse from main app) */
+.pdf-viewer-header .minimize-button {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+  color: #6b7280;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+.pdf-viewer-header .minimize-button:hover {
+  border-color: #9ca3af;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #374151;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pdf-viewer-header .minimize-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Top Controls - File Upload and Navigation */
+.pdf-controls-top {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 12px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.file-upload-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* All controls container */
+.pdf-all-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding-top: 8px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.pdf-nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pdf-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pdf-btn {
+  padding: 8px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+  color: #374151;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pdf-btn:hover {
+  border-color: #2563eb;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.pdf-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.pdf-btn:disabled {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.pdf-btn.primary {
+  background: linear-gradient(135deg, #0d004d 0%, #582cac 100%);
+  border-color: #0d004d;
+  color: white;
+}
+
+.pdf-btn.primary:hover {
+  background: linear-gradient(135deg, #582cac 0%, #0d004d 100%);
+  border-color: #582cac;
+}
+
+.file-name {
+  color: #374151;
+  font-weight: 500;
+  font-size: 14px;
+  max-width: 300px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* PDF Display Area with Scrolling */
+.pdf-display-area {
+  flex: 1;
+  padding: 20px;
+  overflow: scroll !important; /* Force scrollbars to always show */
+  background: #f8fafc;
+  position: relative;
+  min-height: 0;
+  max-height: 100%; /* Ensure it doesn't exceed container */
+  height: 0; /* Force flex child to respect container height */
+  text-align: center; /* Center the inline-block canvas container */
+  /* For Firefox */
+  scrollbar-width: auto; /* Make scrollbars more visible */
+  scrollbar-color: #64748b #f1f5f9;
+}
+
+/* PDF Canvas Container */
+.pdf-canvas-container {
+  display: inline-block; /* Changed from flex to inline-block */
+  min-width: min-content; /* Allow content to determine width */
+  min-height: min-content; /* Allow content to determine height */
+  text-align: left; /* Reset text alignment for canvas */
+}
+
+/* PDF Page Container - holds canvas and text layer */
+.pdf-page-container {
+  position: relative;
+  display: inline-block;
+}
+
+#pdfCanvas {
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: white;
+  display: block;
+  max-width: none; /* Remove max-width constraint */
+  max-height: none; /* Remove max-height constraint */
+}
+
+/* PDF Text Layer for selection */
+.pdf-text-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  opacity: 1; /* Fully visible but text is transparent */
+  line-height: 1.0;
+  pointer-events: auto; /* Enable text selection */
+  user-select: text; /* Ensure text is selectable */
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* PDF.js TextLayer classes */
+.pdf-text-layer .textLayer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  opacity: 1;
+  line-height: 1.0;
+}
+
+.pdf-text-layer .textLayer > span {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* Text layer spans for individual text elements */
+.pdf-text-layer span {
+  color: transparent; /* Hide the text visually */
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+  user-select: text; /* Ensure text is selectable */
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+}
+
+/* Show selection highlighting */
+.pdf-text-layer span::selection,
+.pdf-text-layer .textLayer > span::selection {
+  background: rgba(37, 99, 235, 0.3); /* Blue selection highlight matching app theme */
+  color: transparent; /* Keep text transparent even when selected */
+}
+
+.pdf-text-layer span::-moz-selection,
+.pdf-text-layer .textLayer > span::-moz-selection {
+  background: rgba(37, 99, 235, 0.3); /* Firefox selection highlight */
+  color: transparent; /* Keep text transparent even when selected */
+}
+
+.pdf-message {
+  text-align: center;
+  color: #6b7280;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  padding: 40px;
+  border-radius: 12px;
+  border: 2px dashed #d1d5db;
+  max-width: 400px;
+}
+
+.pdf-message h3 {
+  color: #374151;
+  margin-bottom: 12px;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+  font-size: 1.2em;
+}
+
+.pdf-message p {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.page-info {
+  color: #374151;
+  font-weight: 500;
+  font-size: 14px;
+  min-width: 120px;
+  text-align: center;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.page-input {
+  width: 50px;
+  padding: 2px 6px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  text-align: center;
+  background: white;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.page-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+.page-input:hover {
+  border-color: #9ca3af;
+}
+
+.zoom-info {
+  color: #374151;
+  font-weight: 500;
+  font-size: 14px;
+  min-width: 60px;
+  text-align: center;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .pdf-controls-top {
+    padding: 12px 16px;
+  }
+  
+  .pdf-all-controls {
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 12px;
+  }
+  
+  .pdf-nav-controls,
+  .pdf-zoom-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .page-info {
+    min-width: auto;
+    flex-direction: column;
+    gap: 2px;
+  }
+  
+  .page-input {
+    width: 60px; /* Slightly wider on mobile */
+  }
+  
+  .file-upload-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .file-name {
+    max-width: 100%;
+  }
+  
+  .pdf-display-area {
+    padding: 12px;
+  }
+}
+
+/* Loading and Error States */
+.pdf-message.loading {
+  border-color: #2563eb;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.pdf-message.error {
+  border-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.pdf-message.error h3 {
+  color: #dc2626;
+}
+
+/* Keyboard shortcuts hint */
+.pdf-all-controls::after {
+  content: "💡 Use ← → arrow keys to navigate, Ctrl+/- to zoom, select text and Ctrl+C to copy";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #9ca3af;
+  font-style: italic;
+  white-space: nowrap;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 300;
+  margin-top: 4px;
+}
+
+/* Smooth transitions */
+.pdf-viewer-container * {
+  transition: all 0.2s ease;
+}
+
+/* Focus styles for accessibility */
+.pdf-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  border-color: #2563eb;
+}
+
+/* Custom scrollbar for PDF display area */
+.pdf-display-area::-webkit-scrollbar {
+  width: 16px; /* Made even larger for visibility */
+  height: 16px;
+}
+
+.pdf-display-area::-webkit-scrollbar-track {
+  background: #e2e8f0; /* More visible background */
+  border-radius: 8px;
+  border: 2px solid #cbd5e1; /* Thicker border */
+}
+
+.pdf-display-area::-webkit-scrollbar-thumb {
+  background: #475569; /* Much darker for visibility */
+  border-radius: 8px;
+  border: 2px solid #e2e8f0; /* Contrasting border */
+}
+
+.pdf-display-area::-webkit-scrollbar-thumb:hover {
+  background: #334155; /* Even darker on hover */
+}
+
+.pdf-display-area::-webkit-scrollbar-corner {
+  background: #e2e8f0;
+} 
