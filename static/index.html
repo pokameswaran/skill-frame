@@ -954,10 +954,10 @@
 
   <body>
     <!-- Pearson Title Bar -->
-    <div class="title-bar">
+    <!-- <div class="title-bar">
       <img src="/static/images/pearson-logo.png" alt="Pearson" class="pearson-logo">
       <h1>Scriptly - AI Role Play to develop soft skills</h1>
-    </div>
+    </div> -->
     
     <div class="main-container">
       <!-- Left content area - Initially shows welcome message -->
@@ -1070,7 +1070,7 @@
           spaState = 'create';
           mainFlowContainer.innerHTML = `
             <div class="welcome-message" id="welcomeMessage" style="text-align:center; margin-top:60px;">
-              <h1 style="font-size:2em; font-weight:700; margin-bottom:0.2em; background: linear-gradient(90deg,#222 40%,#0073b1 60%,#7b2ff2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Practice everyday work conversations with<br><span style="background: linear-gradient(90deg,#0073b1 40%,#7b2ff2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI-powered role play</span></h1>
+              <h1 style="font-size:2em; font-weight:700; margin-bottom:0.2em; background: linear-gradient(90deg,#222 40%,#0073b1 60%,#7b2ff2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Practice everyday work conversations with<br><span style="background: linear-gradient(90deg,#0073b1 40%,#7b2ff2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AI-Powered Role Play</span></h1>
               <div style="font-size:1.2em; color:#555; margin-bottom:32px;">We'll use AI to get you started. You can edit the details in the next step.</div>
               <textarea id="rolePlayTextArea" style="width:60%;min-height:80px;margin:0 auto 24px auto;display:block;padding:18px 20px;font-size:1.2em;border-radius:18px;border:1.5px solid #222;box-shadow:0 2px 16px #eaf1fa;"></textarea>
               <div id="rolePlayLoading" style="display:none;margin:0 auto 12px auto;font-size:0.98em;color:#0073b1;font-weight:400;letter-spacing:0.01em;">Building your role play…</div>
@@ -1415,8 +1415,6 @@
                 <button class="btn-share" id="shareBtn">Share</button>
                 <button class="btn-start" id="startConversationBtn">Start</button>
               </div>
-              <div class="powered-by">This is powered by AI and may make mistakes. <a href="#" style="color:#2563eb;">Learn more</a></div>
-              <div class="created-by">By AI Learning Coach</div>
             </div>
           `;
           mainFlowContainer.querySelector('#backToCreate').onclick = function() { renderCreateRole(); };
@@ -1617,7 +1615,6 @@
                 <button type="button" id="audioToggleButton" class="toggle-button" title="Click to start/stop audio">🎙️</button>
                 <button class="end-btn" id="convEndBtn">End session</button>
               </div>
-              <div class="conversation-powered">This conversation is powered by AI. Pearson does not store or use your audio for training purposes.</div>
             </div>
           `;
           // Timer logic
@@ -1842,7 +1839,6 @@
                 <div class="preparing-step active">Preparing helpful suggestions</div>
                 <div class="preparing-step inactive">Finalizing your results</div>
               </div>
-              <div class="preparing-powered">This conversation is powered by AI. Pearson does not store or use your audio for training purposes.</div>
             </div>
           `;
           // No automatic transition - wait for real AI analysis results
