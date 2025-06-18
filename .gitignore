@@ -12,6 +12,7 @@ test.py
 
 ;;directories to ignore
 .idea/
+.winenv
 venv
 .venv/
 google_search_agent/__pycache__/
